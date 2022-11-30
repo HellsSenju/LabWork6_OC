@@ -7,11 +7,11 @@ public class Banker {
     int[] available = new int[] {3, 3, 2}; //вектор доступных ресурсов m
     int[][] max = new int[][] //макс потребности процессов в ресурсах [n][m]
     {
-        { 7, 5, 3 }, //P0
+        { 7, 5, 10 }, //P0
         { 3, 2, 2 }, //P1
         { 9, 0, 2 }, //P2
         { 2, 2, 2 }, //P3
-        { 4, 3, 3 }  //P4
+        { 11, 3, 3 }  //P4
     };
     int[][] allocation = new int[][] //фактическое выделение ресурсов системой [n][m]
     {
@@ -23,39 +23,7 @@ public class Banker {
     };
     int[][] need = new int[n][m]; //оставшиеся потребности процессов в ресурсах
 
-/*    int n; //кол во процессов
-    int m; //кол во типов ресурсов
-
-    int[] available; //вектор доступных ресурсов
-    int[][] max; //макс потребности процессов в ресурсах [n][m]
-    int[][] allocation; //фактическое выделение ресурсов системой [n][m]
-
-    int[][] need ; //оставшиеся потребности процессов в ресурсах*/
-
-/*    public Banker(){
-        Random rnd = new Random();
-        n = rnd.nextInt(3, 6);
-        m = rnd.nextInt(2,4);
-
-        need = new int[n][m];
-
-        available = new int[m];
-        for(int i = 0; i < m; i++) available[i] = rnd.nextInt(2,5);
-
-        max = new int[n][m];
-        for(int i = 0; i < n; i++)
-            for(int j = 0; j < m; j++)
-                max[i][j] = rnd.nextInt(2,10);
-
-        allocation = new int[n][m];
-        for(int i = 0; i < n; i++)
-            for(int j = 0; j < m; j++)
-                allocation[i][j] = rnd.nextInt(0,6);
-        Print();
-        FillNeed();
-    }*/
-
-    public void Do(){
+    public void Do(boolean algoritm){
         Print();
         FillNeed();
         String solution = "";
@@ -66,47 +34,97 @@ public class Banker {
         boolean flag;
 
         int[] work = available; //пробные выделения ресурсов
+        PrintWork();
 
         //i = n
         //j = m
         int kol = n;
-        while(kol > 0){
-            for(int i = 0; i < n; i++){
-                flag = true;
-                for(int j = 0; j < m; j++){
-                    if (finish[i] | need[i][j] > work[j]) {
-                        flag = false;
+        if(algoritm){
+            while(kol > 0){
+                for(int i = 0; i < n; i++){
+                    flag = true;
+                    for(int j = 0; j < m; j++){
+                        if (finish[i] | need[i][j] > work[j]) {
+                            flag = false;
+                            break;
+                        }
+                    }
+
+                    if(flag) //если условие выполняется для всей строки
+                    {
+                        solution += "-> " + "P" + i;
+                        for(int j = 0; j < m; j++)
+                            work[j] = work[j] + allocation[i][j]; // высвобождаем ресурсы строки
+                        finish[i] = true;
                         break;
                     }
                 }
+                PrintWork();
+                kol--;
+            }
 
-                if(flag) //если условие выполняется для всей строки
-                {
-                    solution += "-> " + "P" + i;
-                    for(int j = 0; j < m; j++)
-                        work[j] = work[j] + allocation[i][j]; // высвобождаем ресурсы строки
-                    finish[i] = true;
+            flag = true;
+            for(int i = 0; i < n; i++)
+                if (!finish[i]) {
+                    flag = false;
                     break;
                 }
-            }
-            kol--;
-        }
 
-        flag = true;
-        for(int i = 0; i < n; i++)
-            if (!finish[i]) {
-                flag = false;
-                break;
+            if(flag) // если во всех ячейках finish - true - система безопасна
+            {
+                System.out.println("Cистема в безопасном состоянии");
+                System.out.println(solution);
             }
-
-        if(flag) // если во всех ячейках finish - true - система безопасна
-        {
-            System.out.println("Cистема в безопасном состоянии");
-            System.out.println(solution);
+            else System.out.println("Cистема в небезопасном состоянии");
         }
-        else System.out.println("Cистема в небезопасном состоянии");
+        else{
+            while(kol > 0){
+                for(int i = 0; i < n; i++){
+                    flag = true;
+                    for(int j = 0; j < m; j++){
+                        if (finish[i] | need[i][j] > work[j]) {
+                            flag = false;
+                            break;
+                        }
+                    }
+
+                    if(flag) //если условие выполняется для всей строки
+                    {
+                        solution += "-> " + "P" + i;
+                        for(int j = 0; j < m; j++)
+                            work[j] = work[j] + allocation[i][j]; // высвобождаем ресурсы строки
+                        finish[i] = true;
+                        break;
+                    }
+                }
+                PrintWork();
+                kol--;
+            }
+            String blocked = "";
+            flag = true;
+            for(int i = 0; i < n; i++)
+                if (!finish[i]) {
+                    blocked += "P" + i + "  ";
+                    flag = false;
+                }
+
+            if(flag)
+            {
+                System.out.println("Все процессы выполнены: " + solution);
+            }
+            else{
+                System.out.println("Блокировки: " + blocked);
+                System.out.println("Законченные процессы: " + solution);
+            }
+        }
     }
 
+    private void PrintWork(){
+        System.out.println("==============");
+        System.out.print("Work: ");
+        for(int i = 0; i < m; i++) System.out.print(available[i] + " ");
+        System.out.println();
+    }
     public void FillNeed(){
         System.out.println("need: ");
         for(int i = 0; i < n; i++){
